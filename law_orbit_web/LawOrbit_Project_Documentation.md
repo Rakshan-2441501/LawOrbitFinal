@@ -15,19 +15,21 @@
 2. [Problem Statement](#2-problem-statement)
 3. [Objectives](#3-objectives)
 4. [Software Requirements Specification (SRS)](#4-software-requirements-specification-srs)
-5. [System Architecture](#5-system-architecture)
-6. [EER Diagram](#6-eer-diagram)
-7. [Use Case Diagram](#7-use-case-diagram)
-8. [Database Schema Design](#8-database-schema-design)
-9. [Module Descriptions](#9-module-descriptions)
-10. [Code Snippets](#10-code-snippets)
-11. [Screenshots & UI Description](#11-screenshots--ui-description)
-12. [Security Features](#12-security-features)
-13. [API Reference](#13-api-reference)
-14. [Testing](#14-testing)
-15. [Conclusion](#15-conclusion)
-16. [Future Scope](#16-future-scope)
-17. [References](#17-references)
+5. [Technology Stack (Detailed)](#5-technology-stack-detailed)
+6. [System Architecture](#6-system-architecture)
+7. [EER Diagram](#7-eer-diagram)
+8. [Use Case Diagram](#8-use-case-diagram)
+9. [Database Schema Design](#9-database-schema-design)
+10. [Database Design & Normalization Analysis (1NF–5NF)](#10-database-design--normalization-analysis-1nf5nf)
+11. [Module Descriptions](#11-module-descriptions)
+12. [Code Snippets](#12-code-snippets)
+13. [Screenshots & UI Description](#13-screenshots--ui-description)
+14. [Security Features](#14-security-features)
+15. [API Reference](#15-api-reference)
+16. [Testing](#16-testing)
+17. [Conclusion](#17-conclusion)
+18. [Future Scope](#18-future-scope)
+19. [References](#19-references)
 
 ---
 
@@ -162,7 +164,81 @@ The primary objectives of LawOrbit are:
 
 ---
 
-## 5. System Architecture
+## 5. Technology Stack (Detailed)
+
+LawOrbit uses a modern **3-tier architecture** with carefully chosen technologies for each layer.
+
+### 5.1 Backend Technologies
+
+| Technology | Role | Why Chosen |
+|-----------|------|------------|
+| **Node.js v22.14.0** | Server runtime | Non-blocking I/O for handling multiple concurrent API requests from lawyers, clerks, and clients simultaneously. Single-language (JavaScript) across full stack reduces development complexity. |
+| **Express.js v4.x** | Web framework | Lightweight, unopinionated framework ideal for building RESTful APIs. Middleware architecture enables clean separation of concerns (authentication, authorization, parsing). |
+| **MySQL 8.0** | Relational database | ACID-compliant transactions essential for financial data (invoices, payments). Strong relational model suits the interconnected nature of legal entities (cases → hearings → documents). |
+| **mysql2/promise v3.x** | Database driver | Promise-based async/await support. Connection pooling for efficient database resource management under concurrent load. |
+| **jsonwebtoken v9.x** | Authentication | Stateless JWT tokens with 24-hour expiry. Eliminates server-side session storage. Token carries user role for middleware-based authorization. |
+| **bcryptjs v2.x** | Password security | Industry-standard adaptive hashing with configurable salt rounds. Resistant to rainbow table and brute-force attacks. |
+| **nodemailer v6.x** | Email service | Gmail SMTP integration for sending user credentials and admin OTP verification codes. HTML email templates with branded styling. |
+| **dotenv v16.x** | Configuration | Environment variable management separating sensitive credentials (DB passwords, JWT secrets, API keys) from source code. |
+| **cors** | Security middleware | Cross-Origin Resource Sharing configuration to control which domains can access the API. |
+| **body-parser** | Request parsing | Parses incoming JSON request bodies with configurable size limits (50MB for document uploads). |
+
+### 5.2 Frontend Technologies
+
+| Technology | Role | Why Chosen |
+|-----------|------|------------|
+| **Vanilla JavaScript (ES6+)** | Application logic | Zero framework overhead. Direct DOM manipulation for maximum performance. Single-page application (SPA) pattern with client-side routing. |
+| **HTML5** | Structure | Semantic elements (`<nav>`, `<main>`, `<section>`) for accessibility and SEO. |
+| **CSS3** | Styling | Custom CSS variables (design tokens) for theming. CSS Grid and Flexbox for responsive layouts. Keyframe animations for micro-interactions. |
+| **Chart.js v4.x** | Data visualization | 5 chart types used: Bar, Doughnut, Line (with gradient fills), Polar Area, and stock-like trend charts with period toggles. Smooth `easeOutElastic` and `easeInOutQuart` animations. |
+| **Leaflet.js v1.9.4** | Interactive maps | Lightweight open-source map library (42KB). Displays 33 Indian court locations with custom color-coded markers. OpenStreetMap tile integration (no API key required). |
+| **Phosphor Icons v2.1.1** | Iconography | 6,000+ consistent phosphor icons in regular weight. Used across navigation, buttons, cards, and status indicators. |
+| **Google Fonts (Inter)** | Typography | Modern, highly legible sans-serif typeface optimized for UI. Variable font support for fine-grained weight control. |
+
+### 5.3 Development & Infrastructure Tools
+
+| Tool | Purpose |
+|------|---------|
+| **npm** | Package management and script running |
+| **Git** | Version control |
+| **MySQL Workbench / CLI** | Database administration and query testing |
+| **Postman / curl** | API endpoint testing |
+| **Chrome DevTools** | Frontend debugging, network analysis, responsive testing |
+| **VS Code** | Primary IDE with JavaScript/Node.js extensions |
+
+### 5.4 Project Dependencies (`package.json`)
+
+```json
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "nodemailer": "^6.9.7",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1"
+  }
+}
+```
+
+### 5.5 Architecture Pattern
+
+The project follows a **Model-Route-Controller (MRC)** pattern:
+
+| Layer | Directory | Responsibility |
+|-------|-----------|---------------|
+| **Config** | `/config/db.js` | Database connection pool configuration |
+| **Middleware** | `/middleware/` | JWT verification, role-based authorization guards |
+| **Routes** | `/routes/` (16 files) | API endpoint definitions with business logic |
+| **Database** | `/database/init_db.js` | Schema definitions, migrations, seed data |
+| **Public** | `/public/` | Frontend SPA (HTML, CSS, JavaScript) |
+| **Assets** | `/public/css/`, `/public/js/` | Stylesheets and modular JS files |
+
+---
+
+## 6. System Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -201,7 +277,7 @@ The primary objectives of LawOrbit are:
 
 ---
 
-## 6. EER Diagram
+## 7. EER Diagram
 
 ```
                             ┌──────────────────┐
@@ -268,7 +344,7 @@ The primary objectives of LawOrbit are:
 
 ---
 
-## 7. Use Case Diagram
+## 8. Use Case Diagram
 
 ```
                     ┌─────────────────────────────────────────────┐
@@ -327,7 +403,7 @@ The primary objectives of LawOrbit are:
 
 ---
 
-## 8. Database Schema Design
+## 9. Database Schema Design
 
 ### 8.1 Complete Table List (26 Tables)
 
@@ -448,7 +524,173 @@ CREATE TABLE physical_doc_history (
 
 ---
 
-## 9. Module Descriptions
+## 10. Database Design & Normalization Analysis (1NF–5NF)
+
+This section provides a thorough analysis of the LawOrbit database design against all five normal forms of relational database theory.
+
+### 10.1 First Normal Form (1NF) — ✅ Fully Satisfied
+
+**Definition:** Every column contains only atomic (indivisible) values. No repeating groups or arrays.
+
+| Criteria | Evidence | Status |
+|----------|----------|---------|
+| Atomic values in all columns | All columns store single values: `name VARCHAR(255)`, `email VARCHAR(255)`, `phone VARCHAR(20)`. No comma-separated lists or arrays. | ✅ |
+| Each row is unique | Every table has `id INT AUTO_INCREMENT PRIMARY KEY` ensuring row uniqueness. | ✅ |
+| No repeating groups | Multi-valued relationships are handled through separate tables (e.g., `user_permissions` junction table instead of a "permissions" column in `users`). | ✅ |
+| Column names are unique | All columns within each table have distinct names. | ✅ |
+
+**Example:** Instead of storing multiple permissions as `permissions = "read,write,delete"` in the `users` table, a separate `user_permissions` junction table is used:
+```
+users(id, name, email, role)
+user_permissions(id, user_id → users, permission_id → permissions, granted_by → users)
+```
+
+### 10.2 Second Normal Form (2NF) — ✅ Fully Satisfied
+
+**Definition:** Must be in 1NF, and every non-key attribute must depend on the entire primary key (no partial dependencies).
+
+| Criteria | Evidence | Status |
+|----------|----------|---------|
+| All tables in 1NF | Confirmed above | ✅ |
+| Single-column primary keys | All 27 tables use `id INT AUTO_INCREMENT PRIMARY KEY`, a single-column surrogate key. Partial dependencies are impossible with single-column PKs. | ✅ |
+| No composite keys | No table uses a composite primary key, so there is no possibility of a non-key attribute depending on only part of the key. | ✅ |
+
+**Note:** Since every table uses a single-column auto-increment primary key, 2NF is automatically satisfied. There are no composite keys that could create partial dependencies.
+
+### 10.3 Third Normal Form (3NF) — ✅ Satisfied (with documented exceptions)
+
+**Definition:** Must be in 2NF, and no non-key attribute depends transitively on the primary key (i.e., no non-key attribute depends on another non-key attribute).
+
+**Tables with clean 3NF compliance:**
+
+| Table | Analysis |
+|-------|----------|
+| `users` | All attributes (`name`, `email`, `password`, `role`, `phone`) depend directly on `id`. |
+| `permissions` | `name`, `description`, `category` all depend directly on `id`. |
+| `user_permissions` | Junction table. `user_id`, `permission_id`, `granted_by` depend on `id`. |
+| `lawyers` | Extended profile attributes depend on `id`. `user_id` is an FK, not transitive. |
+| `hearings` | `title`, `date`, `time`, `venue` depend on `id`. `case_id` is an FK. |
+| `documents` | `name`, `type`, `size`, `path` depend on `id`. FKs (`case_id`, `uploaded_by`) reference parent entities. |
+| `courts` | `name`, `location`, `city`, `state`, `type`, `latitude`, `longitude`, `phone` all depend on `id`. |
+| `courtrooms` | `room_number`, `judge_name`, `capacity` depend on `id`. `court_id` is an FK. |
+| `invoices` | `amount`, `tax_amount`, `total_amount` all depend on `id`. While `total_amount = amount + tax_amount`, this is a **calculated denormalization** for query performance. |
+| `payments` | `amount`, `payment_method`, `transaction_id`, `status` depend on `id`. |
+| `messages` | `content`, `is_read` depend on `id`. `sender_id`, `receiver_id`, `case_id` are FKs. |
+| `tasks` | `title`, `description`, `priority`, `status`, `due_date` depend on `id`. |
+| `physical_docs` | `document_name`, `current_location`, `barcode`, `doc_type`, `priority` depend on `id`. |
+| `physical_doc_history` | `location`, `action`, `notes` depend on `id`. `doc_id` is an FK. |
+
+**Documented denormalizations (intentional 3NF relaxations for performance):**
+
+| Table | Attribute | Transitive Dependency | Justification |
+|-------|-----------|----------------------|---------------|
+| `invoices` | `total_amount` | `total_amount = amount + tax_amount` | Pre-calculated to avoid computation on every invoice list query. Common pattern in financial systems. |
+| `audit_logs` | `user_name` | `user_id → users.name` | Audit trail must survive user deletion. Storing the name directly ensures audit records remain readable even if the user is deleted. |
+| `cases` | `court_name`, `judge_name` | Could reference `courts` and a `judges` table | Stored as VARCHAR for flexibility — courts and judges may not exist in the system's courts table (especially for external/historical data). |
+
+### 10.4 Boyce-Codd Normal Form (BCNF) — ✅ Satisfied
+
+**Definition:** For every non-trivial functional dependency X → Y, X must be a superkey.
+
+| Analysis Point | Evidence |
+|---------------|----------|
+| Every determinant is a candidate key | All FDs are of the form `{id} → {all other attributes}`, and `id` is always the primary key. |
+| Unique constraints | `users.email`, `cases.case_number`, `invoices.invoice_number` are `UNIQUE`, creating additional candidate keys. Each of these also determines all other attributes in the row. |
+| No non-key determinants | There are no cases where a non-key attribute functionally determines another column (outside the documented denormalizations). |
+
+### 10.5 Fourth Normal Form (4NF) — ✅ Satisfied
+
+**Definition:** Must be in BCNF, with no multi-valued dependencies (MVDs). A table should not store two or more independent multi-valued facts about an entity.
+
+| Potential MVD Scenario | How LawOrbit Handles It | Status |
+|----------------------|-------------------------|--------|
+| A user can have **multiple permissions** AND **multiple cases** | Separate tables: `user_permissions` for permissions, `cases.lawyer_id` / `cases.client_id` for case assignments. Never stored in the same table. | ✅ |
+| A case can have **multiple hearings** AND **multiple documents** | Separate tables: `hearings` (FK→cases) and `documents` (FK→cases). No single table stores both. | ✅ |
+| A court can have **multiple courtrooms** AND **multiple cause_lists** | Separate tables: `courtrooms` (FK→courts) and `cause_lists` (FK→courts). | ✅ |
+| A lawyer can have **multiple ratings** AND **multiple tasks** | Separate tables: `ratings` (FK→users) and `tasks` (FK→users). | ✅ |
+| A physical doc can have **multiple history entries** AND **updates** | `physical_doc_history` stores all history entries separately with `doc_id` FK. | ✅ |
+
+**Example of 4NF compliance:**
+If `users` had a column `permissions VARCHAR(255)` containing `"read,write,delete"` AND a column `cases VARCHAR(255)` containing `"1,2,3"`, this would violate 4NF. Instead, LawOrbit uses:
+- `user_permissions(user_id, permission_id)` — one fact per row
+- `cases(lawyer_id)` / `cases(client_id)` — separate table entirely
+
+### 10.6 Fifth Normal Form (5NF / Project-Join Normal Form) — ✅ Analysis
+
+**Definition:** Must be in 4NF. Every join dependency is implied by the candidate keys. A table is in 5NF if it cannot be decomposed into smaller tables and then reconstructed through natural joins without data loss.
+
+**5NF is relevant when three or more entities have complex interrelationships that could cause spurious tuples upon decomposition.**
+
+| Potential 5NF Scenario | LawOrbit's Design | 5NF Status |
+|-----------------------|-------------------|------------|
+| **Lawyer–Client–Case** (ternary relationship) | The `cases` table stores `(case_id, lawyer_id, client_id)` together. This is correct because a case inherently binds a specific lawyer to a specific client. The relationship is NOT decomposable into `lawyer-case` + `client-case` pairs without losing the specific assignment. | ✅ In 5NF |
+| **User–Permission–GrantedBy** (ternary relationship) | `user_permissions(user_id, permission_id, granted_by)` stores who granted what permission to whom. This is a single fact — decomposing into `user-permission` + `user-granter` pairs would lose the connection of which granter gave which specific permission. | ✅ In 5NF |
+| **Case–Hearing–Judge** (ternary relationship) | `hearings(case_id, judge, venue)` stores a hearing as a single atomic event. A specific hearing for a specific case with a specific judge cannot be decomposed further. | ✅ In 5NF |
+| **Invoice–Case–Lawyer–Client** (quaternary relationship) | `invoices(case_id, lawyer_id, client_id, amount)` — an invoice binds a specific case to a specific lawyer-client pair with a specific amount. This is a single business fact. | ✅ In 5NF |
+| **Message–Case–Sender–Receiver** | `messages(case_id, sender_id, receiver_id, content)` — a message is one atomic communication fact. Cannot be decomposed without data loss. | ✅ In 5NF |
+| **PhysicalDocHistory–Doc–Location–Handler** | `physical_doc_history(doc_id, location, handled_by, action)` — each row is one atomic tracking event. | ✅ In 5NF |
+
+### 10.7 Normalization Summary Table
+
+| Normal Form | Definition | LawOrbit Status | Evidence |
+|------------|-----------|-----------------|----------|
+| **1NF** | Atomic values, no repeating groups | ✅ **Fully Compliant** | All columns are atomic. Junction tables for M:N relationships. Auto-increment PKs for uniqueness. |
+| **2NF** | No partial dependencies | ✅ **Fully Compliant** | All tables use single-column surrogate keys — partial dependencies are structurally impossible. |
+| **3NF** | No transitive dependencies | ✅ **Compliant** (3 documented exceptions) | `invoices.total_amount` (pre-calculated), `audit_logs.user_name` (audit survivability), `cases.court_name` (flexibility). All justified. |
+| **BCNF** | Every determinant is a superkey | ✅ **Fully Compliant** | `id` is PK and sole determinant in all tables. Additional candidate keys (`email`, `case_number`) also determine all attributes. |
+| **4NF** | No multi-valued dependencies | ✅ **Fully Compliant** | All M:N and multi-valued facts decomposed into separate tables with proper FKs. |
+| **5NF** | No join dependencies beyond candidate keys | ✅ **Compliant** | Ternary relationships (`lawyer-client-case`, `user-permission-granter`) correctly stored as single facts. No spurious tuple risks. |
+
+### 10.8 Relationship Types in the Schema
+
+| Relationship | Type | Implementation |
+|-------------|------|----------------|
+| User → Lawyer | 1:1 | `lawyers.user_id` FK (subtype/supertype pattern) |
+| User → Cases (as lawyer) | 1:N | `cases.lawyer_id` FK |
+| User → Cases (as client) | 1:N | `cases.client_id` FK |
+| Case → Hearings | 1:N | `hearings.case_id` FK |
+| Case → Documents | 1:N | `documents.case_id` FK |
+| Case → Timeline Events | 1:N | `case_timeline.case_id` FK |
+| Case → Evidence | 1:N | `evidence.case_id` FK |
+| Case → Physical Docs | 1:N | `physical_docs.case_id` FK |
+| Physical Doc → History | 1:N | `physical_doc_history.doc_id` FK |
+| Document → Versions | 1:N | `doc_versions.document_id` FK |
+| Court → Courtrooms | 1:N | `courtrooms.court_id` FK |
+| Court → Cause Lists | 1:N | `cause_lists.court_id` FK |
+| Invoice → Payments | 1:N | `payments.invoice_id` FK |
+| User ↔ Permissions | M:N | Junction table: `user_permissions` |
+| User → Notifications | 1:N | `notifications.user_id` FK |
+| User → Fraud Alerts | 1:N | `fraud_alerts.user_id` FK |
+| User → Audit Logs | 1:N | `audit_logs.user_id` FK |
+
+### 10.9 Indexing Strategy
+
+| Index Type | Columns | Purpose |
+|-----------|---------|--------|
+| Primary Key (clustered) | `id` on all 27 tables | Unique row identification, B-tree index |
+| Unique Index | `users.email` | Prevent duplicate registrations, fast email lookup during login |
+| Unique Index | `cases.case_number` | Ensure unique case identifiers |
+| Unique Index | `invoices.invoice_number` | Financial document uniqueness |
+| Foreign Key Index | All FK columns | Referential integrity + JOIN performance |
+| ENUM Index | Status columns (`cases.status`, `hearings.status`, etc.) | Constrained value sets, efficient filtering |
+
+### 10.10 Data Integrity Constraints
+
+| Constraint | Implementation | Tables Using It |
+|-----------|----------------|----------------|
+| `NOT NULL` | Required fields must have values | `users.name`, `users.email`, `users.password`, `physical_doc_history.doc_id`, `physical_doc_history.action` |
+| `UNIQUE` | No duplicate values | `users.email`, `cases.case_number`, `invoices.invoice_number`, `permissions.name` |
+| `FOREIGN KEY` | Referential integrity | All FK columns across all tables |
+| `ON DELETE CASCADE` | Automatic child deletion | `user_permissions`, `hearings`, `notifications`, `case_timeline`, `courtrooms` |
+| `ON DELETE SET NULL` | Preserve child, nullify FK | `documents.case_id` |
+| `CHECK` | Value validation | `ratings.rating BETWEEN 1 AND 5` |
+| `ENUM` | Constrained value sets | 15+ tables use ENUMs for status, type, priority, role, etc. |
+| `DEFAULT` | Automatic value assignment | Timestamps (`CURRENT_TIMESTAMP`), counters (`DEFAULT 0`), statuses |
+| `ON UPDATE CURRENT_TIMESTAMP` | Auto-update timestamps | `cases.updated_at`, `physical_docs.last_updated` |
+
+---
+
+## 11. Module Descriptions
 
 ### 9.1 Authentication Module
 Handles user login with JWT-based token authentication. Features account lockout after 3 failed login attempts with automatic fraud alert generation. Supports both bcrypt hashed and plain-text passwords for backward compatibility.
@@ -482,7 +724,7 @@ Role-specific dashboards with Chart.js visualizations including bar charts, doug
 
 ---
 
-## 10. Code Snippets
+## 12. Code Snippets
 
 ### 10.1 JWT Authentication Middleware
 ```javascript
@@ -650,7 +892,7 @@ const ApiService = {
 
 ---
 
-## 11. Screenshots & UI Description
+## 13. Screenshots & UI Description
 
 ### 11.1 Login Page
 - Clean, centered login form with email and password fields
@@ -713,7 +955,7 @@ const ApiService = {
 
 ---
 
-## 12. Security Features
+## 14. Security Features
 
 ### 12.1 Authentication Security
 | Feature | Implementation |
@@ -756,7 +998,7 @@ Admin clicks "Unlock" in Security Dashboard:
 
 ---
 
-## 13. API Reference
+## 15. API Reference
 
 ### 13.1 Authentication APIs
 | Method | Endpoint | Description |
@@ -836,7 +1078,7 @@ Admin clicks "Unlock" in Security Dashboard:
 
 ---
 
-## 14. Testing
+## 16. Testing
 
 ### 14.1 Account Lockout Test Results
 
@@ -862,7 +1104,7 @@ Admin clicks "Unlock" in Security Dashboard:
 
 ---
 
-## 15. Conclusion
+## 17. Conclusion
 
 **LawOrbit** successfully demonstrates a comprehensive, production-grade legal case management platform that addresses the critical challenges facing the Indian legal ecosystem. The system achieves all stated objectives:
 
@@ -893,7 +1135,7 @@ The platform is built with a clean MVC architecture using Node.js + Express.js +
 
 ---
 
-## 16. Future Scope
+## 18. Future Scope
 
 1. **Mobile Application** — React Native or Flutter app for iOS/Android with push notifications.
 
@@ -917,7 +1159,7 @@ The platform is built with a clean MVC architecture using Node.js + Express.js +
 
 ---
 
-## 17. References
+## 19. References
 
 1. **National Judicial Data Grid** — https://njdg.ecourts.gov.in/
 2. **e-Courts Services** — https://ecourts.gov.in/

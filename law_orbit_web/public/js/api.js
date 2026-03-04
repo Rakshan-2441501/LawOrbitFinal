@@ -13,7 +13,18 @@ const ApiService = {
         const r = await fetch(`${API_URL}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const data = await r.json();
         if (data.auth) { localStorage.setItem('token', data.token); localStorage.setItem('user', JSON.stringify(data.user)); return data.user; }
+        if (data.requireOtp) { const err = new Error(data.message || 'OTP required'); err.requireOtp = true; err.adminEmail = data.adminEmail; throw err; }
         throw new Error(data.message || 'Login failed');
+    },
+    async verifyOtp(email, otp) {
+        const r = await fetch(`${API_URL}/auth/verify-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, otp }) });
+        const data = await r.json();
+        if (data.auth) { localStorage.setItem('token', data.token); localStorage.setItem('user', JSON.stringify(data.user)); return data.user; }
+        throw new Error(data.message || 'OTP verification failed');
+    },
+    async resendOtp(email) {
+        const r = await fetch(`${API_URL}/auth/resend-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        return r.json();
     },
     logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.reload(); },
     currentUser() { return JSON.parse(localStorage.getItem('user')); },

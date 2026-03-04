@@ -49,8 +49,9 @@ const UI = {
             const existingAlert = document.getElementById('loginAlert');
             if (existingAlert) existingAlert.remove();
             btn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i> Signing in...';
+            const emailVal = document.getElementById('email').value;
             try {
-                const r = await AuthService.login(document.getElementById('email').value, document.getElementById('password').value);
+                const r = await AuthService.login(emailVal, document.getElementById('password').value);
                 if (r && r.success) App.init(); else {
                     const msg = r.message || 'Login failed';
                     if (msg.toLowerCase().includes('locked')) {
@@ -64,7 +65,6 @@ const UI = {
                         e.target.insertBefore(alertDiv, e.target.firstChild);
                     } else {
                         showToast(msg, 'error');
-                        // Shake the form on failure
                         const formBox = document.querySelector('.login-form-box');
                         if (formBox) { formBox.style.animation = 'shake 0.5s ease'; setTimeout(() => formBox.style.animation = '', 500); }
                     }
@@ -72,7 +72,10 @@ const UI = {
                 }
             } catch (err) {
                 const msg = err.message || 'Login failed';
-                if (msg.toLowerCase().includes('locked')) {
+                if (err.requireOtp) {
+                    // Show OTP verification panel for admin
+                    UI._showAdminOtpPanel(emailVal, err.adminEmail || 'laworbitofficial@gmail.com');
+                } else if (msg.toLowerCase().includes('locked')) {
                     const alertDiv = document.createElement('div');
                     alertDiv.id = 'loginAlert';
                     alertDiv.innerHTML = `<div style="background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.3);border-radius:var(--radius-md);padding:16px;margin-bottom:16px;color:#fca5a5;display:flex;align-items:flex-start;gap:12px;animation:fadeIn 0.3s ease">
@@ -89,6 +92,100 @@ const UI = {
                 btn.innerHTML = '<i class="ph ph-sign-in" style="margin-right:6px"></i> Sign In';
             }
         });
+    },
+
+    _showAdminOtpPanel(adminEmail, targetEmail) {
+        const formBox = document.querySelector('.login-form-box');
+        if (!formBox) return;
+        formBox.innerHTML = `
+            <div style="text-align:center;animation:fadeIn 0.5s ease">
+                <div style="width:72px;height:72px;margin:0 auto 16px;background:linear-gradient(135deg,#7c3aed20,#6d28d920);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative">
+                    <i class="ph ph-shield-check" style="font-size:2rem;color:#7c3aed"></i>
+                    <span style="position:absolute;inset:-4px;border-radius:50%;border:2px solid #7c3aed40;animation:trackPulse 2s ease-in-out infinite"></span>
+                </div>
+                <h2 style="color:white;margin:0 0 6px">OTP Verification</h2>
+                <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin:0 0 8px">Admin security verification required</p>
+                <p style="color:rgba(255,255,255,0.5);font-size:0.75rem;margin:0 0 20px">A 6-digit OTP has been sent to<br><strong style="color:#a78bfa">${targetEmail}</strong></p>
+            </div>
+            <form id="otpForm">
+                <div class="form-group">
+                    <label class="label" style="text-align:center;display:block">Enter OTP Code</label>
+                    <input type="text" class="login-input" id="otpInput" maxlength="6" placeholder="● ● ● ● ● ●" required
+                        style="text-align:center;font-size:1.8rem;letter-spacing:12px;font-weight:800;padding:16px" autocomplete="one-time-code" inputmode="numeric">
+                </div>
+                <div id="otpError" style="display:none;background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.3);border-radius:var(--radius-md);padding:10px;margin-bottom:12px;color:#fca5a5;font-size:0.8rem;text-align:center"></div>
+                <button type="submit" class="login-btn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+                    <i class="ph ph-shield-check" style="margin-right:6px"></i> Verify OTP & Login
+                </button>
+            </form>
+            <div style="text-align:center;margin-top:16px">
+                <button id="resendOtpBtn" onclick="UI._resendOtp('${adminEmail}')" style="background:none;border:none;color:#a78bfa;cursor:pointer;font-size:0.8rem;font-family:inherit;text-decoration:underline">
+                    <i class="ph ph-arrow-clockwise"></i> Resend OTP
+                </button>
+                <span id="resendTimer" style="color:rgba(255,255,255,0.4);font-size:0.75rem;margin-left:8px"></span>
+            </div>
+            <div style="text-align:center;margin-top:12px">
+                <button onclick="UI.renderLogin()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.8rem;font-family:inherit">
+                    <i class="ph ph-arrow-left"></i> Back to Login
+                </button>
+            </div>`;
+
+        // Start resend cooldown
+        UI._startResendCooldown();
+
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otpVal = document.getElementById('otpInput').value.trim();
+            const errDiv = document.getElementById('otpError');
+            errDiv.style.display = 'none';
+            const btn = e.target.querySelector('button[type=submit]');
+            btn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i> Verifying...';
+
+            try {
+                const user = await ApiService.verifyOtp(adminEmail, otpVal);
+                if (user) {
+                    showToast('OTP verified! Welcome back, Admin.', 'success');
+                    App.init();
+                }
+            } catch (err) {
+                errDiv.textContent = err.message || 'Invalid OTP. Please try again.';
+                errDiv.style.display = 'block';
+                btn.innerHTML = '<i class="ph ph-shield-check" style="margin-right:6px"></i> Verify OTP & Login';
+                // Shake the input
+                const inp = document.getElementById('otpInput');
+                if (inp) { inp.style.animation = 'shake 0.5s ease'; setTimeout(() => inp.style.animation = '', 500); inp.value = ''; inp.focus(); }
+            }
+        });
+
+        // Auto-focus OTP input
+        setTimeout(() => { const inp = document.getElementById('otpInput'); if (inp) inp.focus(); }, 100);
+    },
+
+    _startResendCooldown() {
+        let seconds = 30;
+        const timerEl = document.getElementById('resendTimer');
+        const btn = document.getElementById('resendOtpBtn');
+        if (btn) btn.disabled = true;
+        if (btn) btn.style.opacity = '0.4';
+        const interval = setInterval(() => {
+            seconds--;
+            if (timerEl) timerEl.textContent = `(${seconds}s)`;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                if (timerEl) timerEl.textContent = '';
+                if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+            }
+        }, 1000);
+    },
+
+    async _resendOtp(email) {
+        try {
+            await ApiService.resendOtp(email);
+            showToast('New OTP sent to admin email!', 'success');
+            UI._startResendCooldown();
+        } catch (err) {
+            showToast('Failed to resend OTP', 'error');
+        }
     },
 
     renderDashboard(user) {
